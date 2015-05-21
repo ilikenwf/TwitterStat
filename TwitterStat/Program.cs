@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Threading;
 using Tweetinvi;
 using Tweetinvi.Core;
 using Tweetinvi.Core.Enum;
@@ -12,8 +14,6 @@ using Tweetinvi.Core.Interfaces.Streaminvi;
 using Tweetinvi.Core.Interfaces.WebLogic;
 using Tweetinvi.Json;
 using Tweetinvi.Streams;
-using System.IO;
-using System.Collections.Concurrent;
 
 namespace TwitterStat
 {
@@ -21,24 +21,25 @@ namespace TwitterStat
 	{
 		public static void Main (string[] args)
 		{
-            int tweetsRecd = 0;
-            ConcurrentDictionary<string,int> hashtags = new ConcurrentDictionary<string,int>;
+            //doing a simplistic configuration method since we just have 4 strings to deal with
+            string[] apikeys = File.ReadAllLines("apikeys.txt");
+			
+            //set the credentials
+            TwitterCredentials.SetCredentials(apikeys[0], apikeys[1], apikeys[2], apikeys[3]);
 
-            string[] apikeys = File.ReadAllLines("twitapi.txt");
-			TwitterCredentials.SetCredentials(apikeys[0], apikeys[1], apikeys[2], apikeys[3]);
+            //instantiate our tweet processsing class
+            TwitStatHandler twitHandler = new TwitStatHandler();
 
-			Console.WriteLine ("testing...");
-
-			// Access the sample stream
-			var sampleStream = Stream.CreateSampleStream();
+			// access the twitter sample stream
+			var sampleStream = Tweetinvi.Stream.CreateSampleStream();
 			sampleStream.TweetReceived += (sender, arg) => 
-            { 
-                Console.WriteLine(arg.Tweet.e); 
-                tweetsRecd++;
-                Console.WriteLine("Received {0} tweets.", tweetsRecd);
-                
-                TwitHashtag ht;
-                ht.parseHashtag(arg.Tweet.Text);
+            {
+                //for each tweet, fire off a processing thread asyncronously
+                ThreadPool.QueueUserWorkItem(new WaitCallback(twitHandler.TweetProc));
+
+                //output the current number of processed tweets...later this will just
+                //call a method of the handler to update our stats in the console
+                Console.Write("\rReceived {0} tweets...    ", twitHandler.tweetsRecd);
             };
 			sampleStream.StartStream();
 		}

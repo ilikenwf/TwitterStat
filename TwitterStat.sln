@@ -1,7 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwitterStat", "TwitterStat\TwitterStat.csproj", "{DB6B1920-D2DF-40EC-A482-F63DF56F1B4B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8FBC8668-8AEA-4404-B151-27B5F99ED637}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,5 +17,8 @@ Global
 		{DB6B1920-D2DF-40EC-A482-F63DF56F1B4B}.Debug|x86.Build.0 = Debug|x86
 		{DB6B1920-D2DF-40EC-A482-F63DF56F1B4B}.Release|x86.ActiveCfg = Release|x86
 		{DB6B1920-D2DF-40EC-A482-F63DF56F1B4B}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal
