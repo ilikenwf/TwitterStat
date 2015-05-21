@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
+using System.Timers;
 using Tweetinvi;
 using Tweetinvi.Core;
 using Tweetinvi.Core.Enum;
@@ -30,16 +31,18 @@ namespace TwitterStat
             //instantiate our tweet processsing class
             TwitStatHandler twitHandler = new TwitStatHandler();
 
+            // Create a timer to output our status every quarter second
+            System.Timers.Timer outputStatus = new System.Timers.Timer();
+            outputStatus.Elapsed += new ElapsedEventHandler(twitHandler.outputStatus);
+            outputStatus.Interval = 250;
+            outputStatus.Enabled = true;
+
 			// access the twitter sample stream
 			var sampleStream = Tweetinvi.Stream.CreateSampleStream();
 			sampleStream.TweetReceived += (sender, arg) => 
             {
                 //for each tweet, fire off a processing thread asyncronously
-                ThreadPool.QueueUserWorkItem(new WaitCallback(twitHandler.TweetProc));
-
-                //output the current number of processed tweets...later this will just
-                //call a method of the handler to update our stats in the console
-                Console.Write("\rReceived {0} tweets...    ", twitHandler.tweetsRecd);
+                ThreadPool.QueueUserWorkItem(new WaitCallback(twitHandler.TweetProc), new object[] { arg.Tweet });
             };
 			sampleStream.StartStream();
 		}
