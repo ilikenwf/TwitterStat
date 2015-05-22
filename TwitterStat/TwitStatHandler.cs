@@ -112,7 +112,7 @@ namespace TwitterStat
 
             for (int i = 1; i <= 10; i++)
             {
-                string hash = (i < ht.Length) ? ht[i] : "";
+                string hash = (i < ht.Length) ? "#"+ht[i] : "";
                 string emo = (i < te.Length) ? te[i] : "";
                 string tld = (i < td.Length) ? td[i] : "";
 
