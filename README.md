@@ -5,3 +5,5 @@ Currently, console only, later on I may turn it into a rest service so we can pr
 This application displays various statistics about the twitter live sample feed.
 
 Licensed under the GNU GPL V3
+
+![Screenshot](http://i.imgur.com/ewAQdyS.png)
