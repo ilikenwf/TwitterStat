@@ -24,6 +24,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using System.Net;
 
 namespace TwitterStat
 {
@@ -97,10 +98,14 @@ namespace TwitterStat
 
             //some hashtags may require a unicode compatible font for proper display
             Console.Clear();
+
             Console.WriteLine("Processed {0} tweets.", _tweetsRecd);
 
             Console.WriteLine();
+
             Console.WriteLine("% w/URL: {0}", percDone);
+
+            Console.WriteLine();
 
             Console.WriteLine(String.Format(" {0,0} | {1,20} | {2,40} ", 
                 "Hashtags  ", "Emoji     ", "TLD's".PadRight(100)));
@@ -156,7 +161,7 @@ namespace TwitterStat
             }
         }
 
-
+        //get our top level domains
         private void addTLD(List<Tweetinvi.Core.Interfaces.Models.Entities.IUrlEntity> tldList)
         {
             foreach (Tweetinvi.Core.Interfaces.Models.Entities.IUrlEntity url in tldList)
@@ -164,7 +169,7 @@ namespace TwitterStat
                 try
                 {
                     Interlocked.Increment(ref _numURL);
-                    Uri uri = new Uri(url.URL);
+                    Uri uri = new Uri(ResolveDomain(url.URL));
                     string domain = uri.GetLeftPart(UriPartial.Authority);
                     tldContainer.AddOrUpdate(domain, 1, (key, oldValue) => oldValue + 1);
                 }
@@ -173,6 +178,29 @@ namespace TwitterStat
                     Console.WriteLine("Error inserting TLD.");
                 }
             }
+        }
+
+        //domain resolver
+        //modified from http://stackoverflow.com/questions/704956/getting-the-redirected-url-from-the-original-url
+        private static string ResolveDomain(string url)
+        {
+            string uriString = url;
+            HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url);
+            webRequest.AllowAutoRedirect = false;
+
+            webRequest.Timeout = 2000; // timeout 2s
+            webRequest.Method = "HEAD";
+            HttpWebResponse webResponse;
+            using (webResponse = (HttpWebResponse)webRequest.GetResponse())
+            {
+                if ((int)webResponse.StatusCode >= 300 && (int)webResponse.StatusCode <= 399)
+                {
+                    uriString = webResponse.Headers["Location"];
+                    webResponse.Close();
+                }
+            }
+
+            return uriString;
         }
 
         //this one was tough...
