@@ -30,6 +30,9 @@
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\..\..\..\Downloads\Json60r8\Bin\Net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="TweetinviAPI">
       <HintPath>..\..\..\..\..\..\home\matt\Desktop\Tweetinvi 0.9.7.1 - Merged Binaries\TweetinviAPI.dll</HintPath>

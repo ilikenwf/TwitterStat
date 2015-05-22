@@ -65,6 +65,8 @@ namespace TwitterStat
                                orderby q.Value descending 
                                select q.Key).Take(10);
 
+
+            //some hashtags may require a unicode compatible font for proper display
             Console.Clear();
             Console.WriteLine("Processed {0} / {1} tweets.", _tweetsRecd, _tweetsProcd);
             Console.WriteLine(String.Format(" {0,0} | {1,10} | {2,20} ", "Top Hashtags", "Top Emoji".PadRight(8), "Top TLDs".PadRight(22)));
