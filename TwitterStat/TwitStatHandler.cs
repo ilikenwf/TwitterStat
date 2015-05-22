@@ -34,7 +34,9 @@ namespace TwitterStat
         //private stat storage
         private static int _tweetsRecd = 0; //number of tweets received
         private static int _tweetsProcd = 0; //number of tweets processed...debug use
-        private static int _numURL = 0; //workaround because dictionary summing isn't working
+        private static int _numURL = 0; //num urls
+        private static int _numPic = 0; //num pictures
+        private static int _numVid = 0; //misnomer, includes any other "media" embedded that isn't an image
         private static JArray emoji = JArray.Parse(File.ReadAllText("emoji.json"));
 
         private ConcurrentDictionary<string, int> hashtagContainer = 
@@ -65,6 +67,9 @@ namespace TwitterStat
 
             //process the tweet URL's
             addTLD(theTweet.Urls);
+
+            //process the media embedded in the tweet]
+            addMedia(theTweet.Entities.Medias);
 
             //bump up the number of processed tweets after we have actually processed
             Interlocked.Increment(ref _tweetsProcd);
@@ -99,26 +104,33 @@ namespace TwitterStat
             string[] td = topDomains.Cast<string>().ToArray();
 
             //% with urls
-            double percDone = 0;
+            double percUrls = 0;
+            double percVids = 0;
+            double percImg = 0;
 
             if (_numURL > 0 && _tweetsRecd > 0)
             {
-                percDone = Math.Round(((double)_numURL / (double) _tweetsRecd) * 100,2);
+                percUrls = Math.Round(((double)_numURL / (double) _tweetsRecd) * 100,2);
+            }
+
+            if (_numVid > 0 && _tweetsRecd > 0)
+            {
+                percVids = Math.Round(((double)_numVid / (double) _tweetsRecd) * 100,2);
+            }
+
+            if (_numPic > 0 && _tweetsRecd > 0)
+            {
+                percImg = Math.Round(((double)_numPic / (double) _tweetsRecd) * 100,2);
             }
 
             //some hashtags may require a unicode compatible font for proper display
             Console.Clear();
 
             Console.WriteLine("Processed {0} tweets.", _tweetsRecd);
-
             Console.WriteLine();
-
             Console.WriteLine("Tweets/sec: {0} \t Tweets/min: {1} \t Tweets/hr {2}", tweetsPerSec, tweetsPerMin, tweetsPerHr);
-
             Console.WriteLine();
-
-            Console.WriteLine("% w/URL: {0}", percDone);
-
+            Console.WriteLine("% w/URL: {0} \t % w/Pics: {1} \t % w/Other Media {2}", percUrls, percImg, percVids);
             Console.WriteLine();
 
             Console.WriteLine(String.Format(" {0,0} | {1,15} | {2,40} ", 
@@ -190,6 +202,29 @@ namespace TwitterStat
                 catch
                 {
                     Console.WriteLine("Error inserting TLD.");
+                }
+            }
+        }
+
+        //get pictures ...easy to expand to include other media types later since IMediaEntity includes all media
+        private void addMedia(List<Tweetinvi.Core.Interfaces.Models.Entities.IMediaEntity> picAndvidlist)
+        {
+            foreach (Tweetinvi.Core.Interfaces.Models.Entities.IMediaEntity media in picAndvidlist)
+            {
+                try
+                {
+                    if (media.MediaType == "photo")
+                    {
+                        Interlocked.Increment(ref _numPic);
+                    }
+                    else
+                    {
+                        Interlocked.Increment(ref _numVid);
+                    }
+                }
+                catch
+                {
+                    Console.WriteLine("Error bumping media entries.");
                 }
             }
         }
