@@ -7,6 +7,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using System.Text.RegularExpressions;
+using System.Globalization;
+using System.Net;
 using Tweetinvi;
 using Tweetinvi.Core;
 using Tweetinvi.Core.Enum;
@@ -22,9 +25,7 @@ using Tweetinvi.Json;
 using Tweetinvi.Streams;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Text.RegularExpressions;
-using System.Globalization;
-using System.Net;
+using System.Diagnostics;
 
 namespace TwitterStat
 {
@@ -45,8 +46,9 @@ namespace TwitterStat
         private ConcurrentDictionary<string, int> tldContainer =
             new ConcurrentDictionary<string, int>(); //thread safe storage for our tld counts
 
+        //kicks off the processing of a single tweet
         public void TweetProc(Object state)
-        {
+        {  
             //this is tweets received, not tweets processed
             Interlocked.Increment(ref _tweetsRecd);
 
@@ -83,6 +85,14 @@ namespace TwitterStat
                             orderby q.Value descending
                             select q.Key).Take(10);
 
+            TimeSpan runtime = DateTime.Now - Process.GetCurrentProcess().StartTime;
+            double elapsedSeconds = runtime.TotalSeconds;
+            double elapsedMinutes = runtime.TotalMinutes;
+
+            double tweetsPerSec = Math.Round(_tweetsProcd / elapsedSeconds,2);
+            double tweetsPerMin = Math.Round(tweetsPerSec*60,2);
+            double tweetsPerHr = Math.Round(tweetsPerMin*60,2);
+
             //this is nasty but for the sake of nice output...
             string[] ht = topHashtags.Cast<string>().ToArray();
             string[] te = topEmoji.Cast<string>().ToArray();
@@ -103,12 +113,16 @@ namespace TwitterStat
 
             Console.WriteLine();
 
+            Console.WriteLine("Tweets/sec: {0} \t Tweets/min: {1} \t Tweets/hr {2}", tweetsPerSec, tweetsPerMin, tweetsPerHr);
+
+            Console.WriteLine();
+
             Console.WriteLine("% w/URL: {0}", percDone);
 
             Console.WriteLine();
 
-            Console.WriteLine(String.Format(" {0,0} | {1,20} | {2,40} ", 
-                "Hashtags  ", "Emoji     ", "TLD's".PadRight(100)));
+            Console.WriteLine(String.Format(" {0,0} | {1,15} | {2,40} ", 
+                "Hashtags  ", "Emoji     ".PadRight(20), "TLD's".PadRight(100)));
 
             for (int i = 1; i <= 10; i++)
             {
@@ -118,7 +132,7 @@ namespace TwitterStat
 
                 Console.WriteLine(String.Format(" {0,0} | {1,20} | {2,40} ", 
                     new string(hash.Take(10).ToArray()).PadRight(10),
-                    new string(emo.Take(20).ToArray()).PadRight(10), 
+                    new string(emo.Take(20).ToArray()).PadRight(20), 
                     tld.PadRight(40)));
             }
         }
