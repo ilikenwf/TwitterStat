@@ -26,9 +26,9 @@ namespace TwitterStat
     {
         //private stat storage
         private static int _tweetsRecd = 0; //number of tweets received
-        private static int _tweetsProcd = 0; //number of tweets processed
+        private static int _tweetsProcd = 0; //number of tweets processed...debug use
        
-        private ConcurrentDictionary<string, int> hashtags = 
+        private ConcurrentDictionary<string, int> hashtagContainer = 
             new ConcurrentDictionary<string, int>(); //thread safe storage for our hashtag counts
        
         //getters
@@ -52,15 +52,44 @@ namespace TwitterStat
             object[] array = state as object[];
             ITweet theTweet = (ITweet) array[0];
 
-            //Console.WriteLine("Creator: {0}", theTweet.Creator);
+            addHashtags(theTweet.Hashtags);
 
             //bump up the number of processed tweets after we have actually processed
             Interlocked.Increment(ref _tweetsProcd);
         }
-
+    
+        //output nicely to the console
         public void outputStatus(object source, ElapsedEventArgs e)
         {
-            Console.Write("\rProcessed {0} / {1} tweets...    ", _tweetsRecd, _tweetsProcd);
+            var topHashtags = (from q in hashtagContainer
+                               orderby q.Value descending 
+                               select q.Key).Take(10);
+
+            Console.Clear();
+            Console.WriteLine("Processed {0} / {1} tweets.", _tweetsRecd, _tweetsProcd);
+            Console.WriteLine(String.Format(" {0,0} | {1,10} | {2,20} ", "Top Hashtags", "Top Emoji".PadRight(8), "Top TLDs".PadRight(22)));
+
+            foreach (string hashtag in topHashtags) {
+                Console.WriteLine(String.Format(" {0,0} | {1,10} | {2,20} ", new string(hashtag.Take(10).ToArray()).PadRight(12), "x".PadRight(10), "x"));
+            }
+        }
+
+        private void addHashtags(List<Tweetinvi.Core.Interfaces.Models.Entities.IHashtagEntity> hashtags)
+        {
+            if (hashtags != null && hashtags.Count > 0) {
+                foreach (Tweetinvi.Core.Interfaces.Models.Entities.IHashtagEntity hashtag in hashtags)
+                {
+                    try
+                    {
+                        //create/initalize or increment the counter for the hashtag slot
+                        hashtagContainer.AddOrUpdate(hashtag.Text, 1, (key, oldValue) => oldValue + 1);
+                    }
+                    catch (Exception)
+                    {
+                        Console.WriteLine("Error processing hashtag {0}.'", hashtag.Text);
+                    }
+                }
+            }
         }
     }
 }
